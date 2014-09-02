@@ -1,0 +1,127 @@
+<html>
+<head>
+<!--
+#######################
+Written by Drew Vosburg
+drew@truthlabs.com
+http://truthlabs.com
+
+#######################
+-->
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<title>HTML deviceorientation Viewer</title>
+
+<style type="text/css">
+
+html, body, #mask, #camera, #geometry {
+    height: 100%;
+    width: 100%;
+    overflow: visible;
+}
+#mask {
+    -webkit-perspective: 750px;
+    -moz-perspective: 750px;
+    -ms-perspective: 750px;
+    perspective: 750px;
+}
+#mask, #camera, #geometry {
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+
+
+/* CUBE STYLES */
+.cube * {
+    -webkit-background-clip:padding-box; /* IOS fix */
+    background-clip:padding-box; /* IOS fix */
+    -webkit-backface-visibility: hidden;
+}
+.cube {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -25%;
+    margin-top: -25%;
+  transform-style: preserve-3d;
+}
+
+.cube figure {
+  width: 96px;
+  height: 96px;
+  display: block;
+  position: absolute;
+  border: 2px solid black;
+    font-size: 30px;
+    text-align: center;
+    line-height: 96px;
+}
+.cube .front  { -webkit-transform: rotateY(   0deg ) translateZ( 50px ); }
+.cube .back   { -webkit-transform: rotateX( 180deg ) translateZ( 50px ); }
+.cube .right  { -webkit-transform: rotateY(  90deg ) translateZ( 50px ); }
+.cube .left   { -webkit-transform: rotateY( -90deg ) translateZ( 50px ); }
+.cube .top    { -webkit-transform: rotateX(  90deg ) translateZ( 50px ); }
+.cube .bottom { -webkit-transform: rotateX( -90deg ) translateZ( 50px ); }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="mask">
+    <div id="camera">
+        <div id="geometry">
+            <div class="cube show-front">
+              <figure class="front">1</figure>
+              <figure class="back">2</figure>
+              <figure class="right">3</figure>
+              <figure class="left">4</figure>
+              <figure class="top">5</figure>
+              <figure class="bottom">6</figure>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+/* SET THE CAMERA ELEMENT */
+var cameraStyle = document.getElementById("camera").style;
+
+/* SET THE GEOMETRY ELEMENT */
+var geometry = document.getElementById("geometry"),
+    leftGeometryStyle = geometry.style;
+
+/* CHECK FOR BROWSER-SPECIFIC ATTRIBUTES */
+_transform = "WebkitTransform" in cameraStyle ? "WebkitTransform" :
+    "MozTransform" in cameraStyle ? "MozTransform" :
+        "msTransform" in cameraStyle ? "msTransform" : false;
+
+/* FUNCTION CALLED ON deviceorientation */
+function drawThreeDee(ev) {
+    
+    /* SET THE ANGLES BASED ON deviceorientation VALUES */
+    var xAngle = ev.beta;
+    var yAngle = -ev.gamma;
+    var zAngle = ev.alpha;
+    
+    /* BUILD THE CSS ROTATION VALUE... */
+    var rotation = "rotateY("+ yAngle +"deg) rotateX("+ xAngle +"deg) rotateZ("+ zAngle +"deg)";
+    
+    
+    /* ...AND APPLY THE CSS ROTATION TO THE CAMERA ELEMENT */
+    cameraStyle[_transform] = rotation;
+}
+window.addEventListener("deviceorientation", drawThreeDee);
+
+</script>
+</body>
+</html>

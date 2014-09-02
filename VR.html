@@ -1,0 +1,222 @@
+<html>
+<head>
+<!--
+#######################
+Written by Drew Vosburg
+drew@truthlabs.com
+http://truthlabs.com
+
+#######################
+-->
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<title>HTML Virtual Reality</title>
+
+<style type="text/css">
+
+html, body, #leftCamera, #rightCamera, #leftGeometry, #rightGeometry {
+    height: 100%;
+    width: 100%;
+}
+#leftCamera, #rightCamera, #leftGeometry, #rightGeometry {
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+#leftMask, #rightMask {
+    overflow: hidden;
+    height: 50%;
+    width: 100%;
+    position: absolute;
+    -webkit-perspective: 750px;
+    -moz-perspective: 750px;
+    -ms-perspective: 750px;
+    perspective: 750px;
+}
+#leftMask {
+    top: 0;
+}
+#rightMask {
+    bottom: 0;
+}
+
+/* CUBE STYLES */
+
+.cube * {
+    -webkit-background-clip:padding-box; /* IOS fix */
+    background-clip:padding-box; /* IOS fix */
+    -webkit-backface-visibility: hidden;
+}
+.cube {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -25%;
+    margin-top: -25%;
+  transform-style: preserve-3d;
+}
+
+.cube figure {
+  width: 96px;
+  height: 96px;
+  display: block;
+  position: absolute;
+  border: 2px solid black;
+    font-size: 30px;
+    text-align: center;
+    line-height: 96px;
+}
+.cube .front  { -webkit-transform: rotateY(   0deg ) translateZ( 50px ); }
+.cube .back   { -webkit-transform: rotateX( 180deg ) translateZ( 50px ); }
+.cube .right  { -webkit-transform: rotateY(  90deg ) translateZ( 50px ); }
+.cube .left   { -webkit-transform: rotateY( -90deg ) translateZ( 50px ); }
+.cube .top    { -webkit-transform: rotateX(  90deg ) translateZ( 50px ); }
+.cube .bottom { -webkit-transform: rotateX( -90deg ) translateZ( 50px ); }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="geometry">
+    <div class="cube show-front">
+      <figure class="front">1</figure>
+      <figure class="back">2</figure>
+      <figure class="right">3</figure>
+      <figure class="left">4</figure>
+      <figure class="top">5</figure>
+      <figure class="bottom">6</figure>
+    </div>
+</div>
+<div id="leftMask">
+    <div id="leftCamera">
+        <div id="leftGeometry"> 
+        </div>
+    </div>
+</div>
+<div id="rightMask">
+    <div id="rightCamera">
+        <div id="rightGeometry">
+        </div>
+    </div>
+</div>
+
+<script>
+
+/* GLOBAL VARRIABLE FOR DISTANCE BETWEEN THE EYES, IN PX */
+var interpupilaryDistance = "50";
+
+/* SET THE LEFT CAMERA ELEMENT */
+var leftCameraStyle = document.getElementById("leftCamera").style;
+
+/* SET THE RIGHT CAMERA ELEMENT */
+var rightCameraStyle = document.getElementById("rightCamera").style;
+
+/* SET THE LEFT GEOMETRY ELEMENT */
+var leftGeometry = document.getElementById("leftGeometry"),
+    leftGeometryStyle = leftGeometry.style;
+
+/* SET THE RIGHT GEOMETRY ELEMENT */
+var rightGeometry = document.getElementById("rightGeometry"),
+    rightGeometryStyle = rightGeometry.style;
+
+/* CHECK FOR BROWSER-SPECIFIC ATTRIBUTES */
+_transform = "WebkitTransform" in leftCameraStyle ? "WebkitTransform" :
+    "MozTransform" in leftCameraStyle ? "MozTransform" :
+        "msTransform" in leftCameraStyle ? "msTransform" : false;
+
+/* #################################### */
+/* DUPLICATE THE GEOMETRY FOR BOTH EYES */
+/* #################################### */
+
+/* GET THE GEOMETRY FROM THE #geometry ELEMENT */
+var geometry = document.getElementById('geometry');
+
+/* SET THE TWO EYES TO HAVE THE GEOMETRY IN THEM */
+leftGeometry.innerHTML = geometry.innerHTML;
+rightGeometry.innerHTML = geometry.innerHTML;
+
+/* DELETE THE ORIGINAL GEOMETRY ELEMENT */
+geometry.parentNode.removeChild(geometry);
+
+/* FUNCTION CALLED ON deviceorientation */
+function drawThreeDee(ev) {
+    
+    /* SET THE ANGLES BASED ON deviceorientation VALUES */
+    var xAngle = ev.beta;
+    var yAngle = -ev.gamma;
+    var zAngle = ev.alpha;
+    
+    /* BUILD THE CSS ROTATION VALUE... */
+    var rotation = "rotateY("+ yAngle +"deg) rotateX("+ xAngle +"deg) rotateZ("+ zAngle +"deg)";
+        
+    /* #################### */
+    /* LEFT CAMERA POSITION */
+    /* #################### */
+    var xPos = interpupilaryDistance;
+    var yPos = 0;
+    var zPos = 0;
+    /* CONVERT TO RADIANS */
+    xAngle = xAngle * Math.PI / 180;
+    yAngle = yAngle * Math.PI / 180;
+    zAngle = zAngle * Math.PI / 180;
+    
+    /* Z ROTATION */
+    xPos =   (xPos * Math.cos(zAngle)) - (yPos * Math.sin(zAngle));
+    yPos =   (xPos * Math.sin(zAngle)) + (yPos * Math.cos(zAngle));
+    
+    /* X ROTATION */
+    yPos =   (yPos * Math.sin(xAngle)) - (zPos * Math.cos(xAngle));
+    zPos =   (yPos * Math.cos(xAngle)) + (zPos * Math.sin(xAngle));
+    
+    /* Y ROTATION */
+    xPos =   (xPos * Math.sin(yAngle)) + (zPos * Math.cos(yAngle));
+    zPos = - (xPos * Math.cos(yAngle)) + (zPos * Math.sin(yAngle));
+    
+    /* ##################### */
+    /* RIGHT CAMERA POSITION */
+    /* ##################### */
+    var xPos2 = - interpupilaryDistance;
+    var yPos2 = 0;
+    var zPos2 = 0;
+    /* CONVERT TO RADIANS */
+    xAngle = xAngle * Math.PI / 180;
+    yAngle = yAngle * Math.PI / 180;
+    zAngle = zAngle * Math.PI / 180;
+    
+    /* Z ROTATION */
+    xPos2 =   (xPos2 * Math.cos(zAngle)) - (yPos2 * Math.sin(zAngle));
+    yPos2 =   (xPos2 * Math.sin(zAngle)) + (yPos2 * Math.cos(zAngle));
+    
+    /* X ROTATION */
+    yPos2 =   (yPos2 * Math.sin(xAngle)) - (zPos2 * Math.cos(xAngle));
+    zPos2 =   (yPos2 * Math.cos(xAngle)) + (zPos2 * Math.sin(xAngle));
+    
+    /* Y ROTATION */
+    xPos2 =   (xPos2 * Math.sin(yAngle)) + (zPos2 * Math.cos(yAngle));
+    zPos2 = - (xPos2 * Math.cos(yAngle)) + (zPos2 * Math.sin(yAngle));
+    
+    /* ...AND APPLY THE CSS ROTATION TO THE CAMERA ELEMENTS */
+    leftCameraStyle[_transform] = rotation;
+    rightCameraStyle[_transform] = rotation;
+    
+    /* BUILD THE CSS TRANSLATE VALUES... */
+    var rightTranslation = "translate3d(" + xPos2 + "px ," + yPos2 + "px ," + zPos2 + "px)";
+    var leftTranslation = "translate3d(" + xPos + "," + yPos + "," + zPos + "px)";
+    
+    /* ...AND APPLY THE CSS TRANSLATE TO THE GEOMETRY ELEMENTS */
+    leftGeometryStyle[_transform] = leftTranslation;
+    rightGeometryStyle[_transform] = rightTranslation;
+}
+window.addEventListener("deviceorientation", drawThreeDee);
+
+</script>
+</body>
+</html>
